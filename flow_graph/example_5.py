@@ -4,64 +4,10 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import random
 
-G = nx.Graph()
-## add nodes from a list
-#G.add_nodes_from([1,2,3,4,5,6,7])
-#
-## add tree edges from a list
-#G.add_edges_from([(1,2),(2,3),(3,4),(1,5),(5,6),(6,7)])
-#
-## add back edges from a list
-#G.add_edges_from([(3,1),(4,2),(4,1),(7,5)])
-
-# examble b in the paper
-# add nodes from a list
-G.add_nodes_from([1,2,3,4,5,6,7,8])
-
-# add tree edges from a list
-G.add_edges_from([(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8)])
-
-# add back edges from a list
-G_backedge=[(8,1),(7,3),(6,2),(5,4)]
-G.add_edges_from(G_backedge)
-
-# oriented tree constructed from dfs given G
-T = nx.Graph()
-T.add_edges_from(nx.dfs_edges(G, source=1))
-print('G edges are: ', G.edges)
-print('T edges are: ', T.edges)
-
-list_increasing_order= list(T.nodes)
-list_G_edges = list(G.edges)
-
-G_edges = list(nx.dfs_labeled_edges(G, source=1))
-
-# find highest node
-# empty set return infinity number (N+1)
-def find_min(_set, number):
-    if _set:
-        return min(_set)
-    else:
-        return number+1
-
-# find second-highest node
-# empty set return infinity number (N+1)
-def find_second_min(_list, number):
-    if _list:
-        return _list[1]
-    else:
-        return number+1
-
-# dfsnum is the discovery time of each node
-# Here node is named by its discovery time, so just return the node
-def dfsnum(node):
-    return node
-
-max_number = len(T.nodes)
-
 class Edge:
     def __init__(self, source=None, destination=None):
         self.edgeValue=(source,destination)
+        self.id = self.edgeValue
         # index of edge's cycle equivalence class
         self.classIndex=None
         # size of bracket set when e was most recently the topmost edge in a bracket set
@@ -95,16 +41,66 @@ def set_recentSize(_list, _Edge):
 
 
 
+G = nx.DiGraph()
+## add nodes from a list
+#G.add_nodes_from([1,2,3,4,5,6,7])
+#
+## add tree edges from a list
+#G.add_edges_from([(1,2),(2,3),(3,4),(1,5),(5,6),(6,7)])
+#
+## add back edges from a list
+#G.add_edges_from([(3,1),(4,2),(4,1),(7,5)])
+
+# examble b in the paper
+# add nodes from a list
+G.add_nodes_from([1,2,3,4,5,6,7,8])
+
+# add tree edges from a list
+G_treeedge= [(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8)]
+G.add_edges_from(G_treeedge)
+
+# add back edges from a list
+G_backedge=[(8,1),(7,3),(6,2),(5,4)]
+G.add_edges_from(G_backedge)
+
+# oriented tree constructed from dfs given G
+T = nx.DiGraph()
+T.add_edges_from(nx.dfs_edges(G, source=1))
+backedge = G.edges - T.edges
+
+list_increasing_order= list(T.nodes)
+list_G_edges = list(G.edges)
+
+G_edges = list(nx.dfs_labeled_edges(G, source=1))
+
+# find highest node
+# empty set return infinity number (N+1)
+def find_min(_set, number):
+    if _set:
+        return min(_set)
+    else:
+        return number+1
+
+# find second-highest node
+# empty set return infinity number (N+1)
+def find_second_min(_list, number):
+    if _list:
+        return _list[1]
+    else:
+        return number+1
+
+# dfsnum is the discovery time of each node
+# Here node is named by its discovery time, so just return the node
+def dfsnum(node):
+    return node
+
+max_number = len(T.nodes)
+
+
 # find the highest anscestor of each node, h_i0
 ancestors_backedge_nodes=defaultdict(list)
 ancestors_backedge_nodes_edgelist=defaultdict(list)
 highest_ancestor_nodes=defaultdict(list)
-
-for back_edge in G_backedge:
-    print('type of the backedge', type(back_edge))
-    Edge(1,2)
-    print('type of the edge(1,2)', type(Edge(1,2) ))
-
 
 for node, node_2, edgeType in G_edges:
     #if edgeType == 'nontree' and node > node_2 and not T.has_edge(node,node_2): 
@@ -134,10 +130,13 @@ capping_backedge_nodes_edgelist=defaultdict(list)
 # (descendant_1_node_1, node_1) is the backedge from descendant of current node to current node 
 descendants_backedge_nodes_edgelist=defaultdict(list)
 # find the list of descendants of each node that has a backedge from the descendant to the node
+print('G_edges', G_edges)
 for node, node_2, edgeType in G_edges:
-    if edgeType == 'nontree' and node < node_2: 
-        descendants_backedge_nodes_edgelist[node].append(Edge(node_2, node)) 
+    if edgeType == 'nontree' and node > node_2: 
+        print('find one')
+        descendants_backedge_nodes_edgelist[node_2].append(Edge(node, node_2)) 
 
+print(' descendants_backedge_nodes_edgelist: ',  descendants_backedge_nodes_edgelist)
 # create a data structure: {node_1, {child_1_node_1.hi, child_2_node_1.hi,...}}
 hi_children_nodes=defaultdict(list)
 hi_2_children_nodes=defaultdict(list)
