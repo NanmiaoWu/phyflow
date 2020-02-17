@@ -5,20 +5,34 @@ from collections import defaultdict
 import random
 
 G = nx.Graph()
+## add nodes from a list
+#G.add_nodes_from([1,2,3,4,5,6,7])
+#
+## add tree edges from a list
+#G.add_edges_from([(1,2),(2,3),(3,4),(1,5),(5,6),(6,7)])
+#
+## add back edges from a list
+#G.add_edges_from([(3,1),(4,2),(4,1),(7,5)])
+
+# examble b in the paper
 # add nodes from a list
-G.add_nodes_from([1,2,3,4,5,6,7])
+G.add_nodes_from([1,2,3,4,5,6,7,8])
 
 # add tree edges from a list
-G.add_edges_from([(1,2),(2,3),(3,4),(1,5),(5,6),(6,7)])
+G.add_edges_from([(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8)])
 
 # add back edges from a list
-G.add_edges_from([(3,1),(4,2),(4,1),(7,5)])
+G_backedge=[(8,1),(7,3),(6,2),(5,4)]
+G.add_edges_from(G_backedge)
 
 # oriented tree constructed from dfs given G
 T = nx.Graph()
 T.add_edges_from(nx.dfs_edges(G, source=1))
+print('G edges are: ', G.edges)
+print('T edges are: ', T.edges)
 
 list_increasing_order= list(T.nodes)
+list_G_edges = list(G.edges)
 
 G_edges = list(nx.dfs_labeled_edges(G, source=1))
 
@@ -51,9 +65,9 @@ class Edge:
         # index of edge's cycle equivalence class
         self.classIndex=None
         # size of bracket set when e was most recently the topmost edge in a bracket set
-        self.recentSize=None
+        self.recentSize=0
         # euqivalence class number of tree edge for which e was most recently the topmost bracket
-        self.recentClass=None
+        self.recentClass=0
 
     def __repr__(self):
         return str(self.edgeValue)
@@ -85,14 +99,23 @@ def set_recentSize(_list, _Edge):
 ancestors_backedge_nodes=defaultdict(list)
 ancestors_backedge_nodes_edgelist=defaultdict(list)
 highest_ancestor_nodes=defaultdict(list)
+
+for back_edge in G_backedge:
+    print('type of the backedge', type(back_edge))
+    Edge(1,2)
+    print('type of the edge(1,2)', type(Edge(1,2)))
+
+
 for node, node_2, edgeType in G_edges:
-    if edgeType == 'nontree' and node > node_2 and not T.has_edge(node,node_2): 
+    #if edgeType == 'nontree' and node > node_2 and not T.has_edge(node,node_2): 
+    if edgeType == 'nontree' and node > node_2: 
         # find ancestors of each node that has a backedge between the ancestor and the node.         
         ancestors_backedge_nodes[node].append(node_2)       
         ancestors_backedge_nodes_edgelist[node].append(Edge(node, node_2))     
         # find the highest ancestor
         highest_ancestor_nodes[node]=find_min(ancestors_backedge_nodes[node],max_number)
 
+print('ancestors_backedge_nodes is : ', ancestors_backedge_nodes)
 # find children of each node. Note that children means direct descendant 
 children = defaultdict(set, nx.bfs_successors(T, source=1))
 
@@ -157,24 +180,25 @@ for node in list(reversed(list_increasing_order)):
 
 
     # part - compute bracketlist
+    # p1:
     for child in children[node]:
         blist_nodes_edgelist[node]=blist_nodes_edgelist[child]+blist_nodes_edgelist[node]
 
-    # find capping backedges from descendats of n to n 
+    # p2: find capping backedges from descendats of n to n 
     for capping_backedge in  capping_backedge_nodes_edgelist[node]:
         blist_nodes_edgelist[node].remove(capping_backedge)
     
-    # for each backedge from a descendant of n to n
+    # p3: for each backedge from a descendant of n to n
     for backedge_descendant in descendants_backedge_nodes_edgelist[node]:
         blist_nodes_edgelist[node].remove(backedge_descendant)
         if backedge_descendant.classIndex == None:
             backedge_descendant.classIndex=backedge_descendant.set_classIndex()
          
-    # for each backedge e from n to an ancestor of n
+    # p4: for each backedge e from n to an ancestor of n
     for backedge_ancestor in ancestors_backedge_nodes_edgelist[node]:
         blist_nodes_edgelist[node].append(backedge_ancestor)
 
-    # whether create capping backedge
+    # p5: whether create capping backedge
     if hi_2_nodes[node] < hi_0_nodes[node]:
         for destination_node in hi_2_children_nodes[node]:
             # make sure it is a backedge
@@ -191,7 +215,6 @@ for node in list(reversed(list_increasing_order)):
         e = tree_edge_parent_node[node]    
         if blist_nodes_edgelist[node]:    
             b = blist_nodes_edgelist[node][-1]
-            b.recentSize = set_recentSize(blist_nodes_edgelist[node],b)
             if  b.recentSize != len(blist_nodes_edgelist[node]):
                 b.recentSize = len(blist_nodes_edgelist[node])
                 b.recentClass = b.set_classIndex()
