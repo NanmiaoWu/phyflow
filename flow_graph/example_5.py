@@ -103,7 +103,7 @@ highest_ancestor_nodes=defaultdict(list)
 for back_edge in G_backedge:
     print('type of the backedge', type(back_edge))
     Edge(1,2)
-    print('type of the edge(1,2)', type(Edge(1,2)))
+    print('type of the edge(1,2)', type(Edge(1,2) ))
 
 
 for node, node_2, edgeType in G_edges:
