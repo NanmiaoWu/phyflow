@@ -130,13 +130,11 @@ capping_backedge_nodes_edgelist=defaultdict(list)
 # (descendant_1_node_1, node_1) is the backedge from descendant of current node to current node 
 descendants_backedge_nodes_edgelist=defaultdict(list)
 # find the list of descendants of each node that has a backedge from the descendant to the node
-print('G_edges', G_edges)
+
 for node, node_2, edgeType in G_edges:
     if edgeType == 'nontree' and node > node_2: 
-        print('find one')
         descendants_backedge_nodes_edgelist[node_2].append(Edge(node, node_2)) 
 
-print(' descendants_backedge_nodes_edgelist: ',  descendants_backedge_nodes_edgelist)
 # create a data structure: {node_1, {child_1_node_1.hi, child_2_node_1.hi,...}}
 hi_children_nodes=defaultdict(list)
 hi_2_children_nodes=defaultdict(list)
